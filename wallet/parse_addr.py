@@ -4,7 +4,7 @@ import sys
 import struct
 import os
 import json
-from lib import account
+from pyTON import address_utils
 
 format    = 'text'
 file      = None
@@ -38,7 +38,7 @@ def run():
     addr["wc"] = str(struct.unpack("i", addr["raw"][32:])[0])
     addr["hex"] = addr["raw"][:32].hex()
     addr["hex_full"] = addr["wc"] + ":" + addr["hex"]
-    addr.update(account.account_forms(addr["hex_full"]))
+    addr.update(address_utils.account_forms(addr["hex_full"]))
     addr.pop('bytes', None)
     addr.pop('raw', None)
 

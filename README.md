@@ -4,6 +4,9 @@ This repository contains collection of helpful tools for TON Network.
 ## Node related 
 Those scripts are helpful for anyone who wishes to operate a TON Node. Located under `/node` path:
 
+## Requirements
+Python scripts require `pyTON` and `tvm-valuetypes` libraries. 
+
 #### IP Conversion
 * `dec2ip.py` will convert decimal IP address representation into IPV4 format. 
 * `ip2dec.py` will convert decimal IPV4 IP address into decimal format.
