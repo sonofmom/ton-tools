@@ -23,5 +23,9 @@ Here you can find example control scripts for services, at the moment daemontool
 
 Node `run` script is tuned to run more then one instance of full node / validator per host. This will probably not be needed in live environment but was/is very handy in test setups.
 
+## Wallet
+#### Parsing
+* `parse_addr.py` will parse addr file and return address information in human readable format or json structure. Start without parameters to see usage instructions.
+
 
  
