@@ -18,4 +18,10 @@ Both scripts will properly convert to and from negative decimals to be used in n
 * `mklite.sh`: Generates JSON structure for lite server listener needed for node `config.json` file
 * `mkpub_dht.sh`: Generates JSON structure that can be used as server definition in network configuration files, requires presence of `generate-random-id` in path. 
 
+#### Services
+Here you can find example control scripts for services, at the moment daemontools `run` files to control node as well as dht server.
+
+Node `run` script is tuned to run more then one instance of full node / validator per host. This will probably not be needed in live environment but was/is very handy in test setups.
+
+
  

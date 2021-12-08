@@ -1,0 +1,23 @@
+#!/bin/sh
+# Daemontools TON dht server initialization script
+# -----------------------------------------------------------------------------
+#
+
+# Full path to dht-server binary
+DH_BIN="/usr/local/opt/ton/bin/dht-server"
+SE_BIN="/usr/local/bin/setuidgid"
+
+# Work directory
+WORK_DIR="/var/db/ton/newton-testnet-dht"
+
+# User account to run node under
+USER="tond"
+
+# Threads to spawn
+THREADS=32
+
+GLOBAL_CONFIG=$WORK_DIR/etc/global_config.json
+DB_DIR=$WORK_DIR/db
+LOG_FILE=$WORK_DIR/log/server.log
+
+exec $SE_BIN $USER $DH_BIN --global-config $GLOBAL_CONFIG --db $DB_DIR --logname $LOG_FILE --threads $THREADS

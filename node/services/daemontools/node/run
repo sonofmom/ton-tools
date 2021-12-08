@@ -1,0 +1,29 @@
+#!/bin/sh
+# Daemontools TON node initialization script
+# -----------------------------------------------------------------------------
+#
+
+# Full path to validator-engine binary
+VE_BIN="/usr/local/bin/validator-engine"
+SE_BIN="/usr/local/bin/setuidgid"
+
+TIDX=1
+
+# DB Timekeep params
+SYNC_BEFORE=86400
+ARCHIVE_TTL=2592000
+
+# Work directory
+WORK_DIR="/var/db/ton/ton-node$TIDX"
+
+# User account to run node under
+USER="tond$TIDX"
+
+# Threads to spawn
+THREADS=4
+
+GLOBAL_CONFIG=$WORK_DIR/etc/global_config.json
+DB_DIR=$WORK_DIR/db
+LOG_FILE=$WORK_DIR/log/node.log
+
+exec $SE_BIN $USER $VE_BIN --global-config $GLOBAL_CONFIG --db $DB_DIR --logname $LOG_FILE --threads $THREADS --sync-before $SYNC_BEFORE --archive-ttl $ARCHIVE_TTL
