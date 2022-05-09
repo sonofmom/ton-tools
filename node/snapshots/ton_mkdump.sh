@@ -1,14 +1,14 @@
 #!/bin/bash
 
-POOL_NAME=$1
+DS_NAME=$1
 TARGET_PATH=$2
 DUMP_TYPE=$3
 NAME_SUFFIX=$4
 
-if ([ -z ${POOL_NAME} ] || [ -z ${TARGET_PATH} ] || [ -z ${DUMP_TYPE} ]);
+if ([ -z ${DS_NAME} ] || [ -z ${TARGET_PATH} ] || [ -z ${DUMP_TYPE} ]);
 then
         echo "Usage: ";
-	echo "   ton_mkdump.sh <pool_name> <target_path> <dump_type> [naming suffix (optional)]";
+	echo "   ton_mkdump.sh <dataset_name> <target_path> <dump_type> [naming suffix (optional)]";
         exit 1
 fi
 
@@ -18,12 +18,18 @@ then
         exit 1
 fi
 
-TON_SPIN_POOL="spinpool/$POOL_NAME"
-TON_SPIN_ROOT="/spinpool/$POOL_NAME"
+###
+# User adjustable parameters
+#
+POOL="spinpool"
 PLZIP_PARAMS="-6 -n8"
-ARCHIVE_FILENAME="ton_dump$NAME_SUFFIX.`date +"%d_%m_%Y.%H-%M-%S"`.$DUMP_TYPE.lz"
 WORK_PATH="/spinpool/work"
+# In Days
 ARCHIVE_LIFETIME=2
+
+TON_ZFS_FS="$POOL/$DS_NAME"
+TON_ZFS_MOUNTPOINT="/$POOL/$DS_NAME"
+ARCHIVE_FILENAME="ton_dump$NAME_SUFFIX.`date +"%d_%m_%Y.%H-%M-%S"`.$DUMP_TYPE.lz"
 
 TAR_BIN="/usr/bin/tar"
 PV_BIN="/usr/bin/pv"
@@ -48,8 +54,8 @@ check_errs()
 }
 
 echo "Performing some sanity checks"
-$LS_BIN $TON_SPIN_ROOT/db/config.json >/dev/null 2>&1
-check_errs $? "$TON_SPIN_ROOT/db/config.json does not exist, sync failed?"
+$LS_BIN $TON_ZFS_MOUNTPOINT/db/config.json >/dev/null 2>&1
+check_errs $? "$TON_ZFS_MOUNTPOINT/db/config.json does not exist, sync failed?"
 
 $LS_BIN $TARGET_PATH >/dev/null 2>&1
 check_errs $? "$TARGET_PATH does not exist"
@@ -60,7 +66,7 @@ check_errs $? "$WORK_PATH does not exist"
 echo "Looks good!"
 
 echo "Removing local configuration and files"
-$RM_BIN -R $TON_SPIN_ROOT/db/config.json* $TON_SPIN_ROOT/db/keyring $TON_SPIN_ROOT/db/dht* $TON_SPIN_ROOT/logs $TON_SPIN_ROOT/keys >/dev/null 2>&1
+$RM_BIN -R $TON_ZFS_MOUNTPOINT/db/config.json* $TON_ZFS_MOUNTPOINT/db/keyring $TON_ZFS_MOUNTPOINT/db/dht* $TON_ZFS_MOUNTPOINT/logs $TON_ZFS_MOUNTPOINT/keys >/dev/null 2>&1
 
 echo "Cleansing workpath"
 $RM_BIN $WORK_PATH/* >/dev/null 2>&1
@@ -68,14 +74,14 @@ $RM_BIN $WORK_PATH/* >/dev/null 2>&1
 if [ "${DUMP_TYPE}" == "zfs" ]
 then
 	echo "Making transfer snap"
-	$ZFS_BIN destroy $TON_SPIN_POOL@dumpstate >/dev/null 2>&1
-	$ZFS_BIN snapshot $TON_SPIN_POOL@dumpstate >/dev/null 2>&1
+	$ZFS_BIN destroy $TON_ZFS_FS@dumpstate >/dev/null 2>&1
+	$ZFS_BIN snapshot $TON_ZFS_FS@dumpstate >/dev/null 2>&1
 
 	echo "Creating ZFS archive, this will take some time!"
-	$ZFS_BIN send $TON_SPIN_POOL@dumpstate | $PV_BIN | $PLZIP_BIN $PLZIP_PARAMS > $WORK_PATH/$ARCHIVE_FILENAME	
+	$ZFS_BIN send $TON_ZFS_FS@dumpstate | $PV_BIN | $PLZIP_BIN $PLZIP_PARAMS > $WORK_PATH/$ARCHIVE_FILENAME	
 else
 	echo "Creating TAR archive, this will take some time!"
-	cd $TON_SPIN_ROOT/db
+	cd $TON_ZFS_MOUNTPOINT/db
 	$TAR_BIN -c * | $PV_BIN | $PLZIP_BIN $PLZIP_PARAMS > $WORK_PATH/$ARCHIVE_FILENAME
 fi
 
@@ -90,7 +96,7 @@ echo "Updating archive size file"
 $STAT_BIN -c%s $TARGET_PATH/$ARCHIVE_FILENAME > $TARGET_PATH/latest$NAME_SUFFIX.size.archive.txt
 
 echo "Updating DB size file"
-$ZFS_BIN get -p -H -o value logicalused $TON_SPIN_POOL > $TARGET_PATH/latest$NAME_SUFFIX.size.disk.txt
+$ZFS_BIN get -p -H -o value logicalused $TON_ZFS_FS > $TARGET_PATH/latest$NAME_SUFFIX.size.disk.txt
 
 echo "Removing old archives"
 $FIND_BIN $TARGET_PATH/* -type f -mtime +$ARCHIVE_LIFETIME -exec $RM_BIN {} \;

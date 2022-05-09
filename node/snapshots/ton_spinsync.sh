@@ -1,18 +1,23 @@
 #!/bin/bash
 
 DB_PATH=$1
-POOL_NAME=$2
+DS_NAME=$2
 SERVICE=$3
 
-if ([ -z ${DB_PATH} ] || [ -z ${POOL_NAME} ] || [ -z ${SERVICE} ]); 
+if ([ -z ${DB_PATH} ] || [ -z ${DS_NAME} ] || [ -z ${SERVICE} ]); 
 then
 	echo "Usage: "; 
-	echo "   ton_spinsync.sh <db_path> <pool_name> <service>"; 
+	echo "   ton_spinsync.sh <db_path> <zfs_dataset_name> <service>"; 
 	exit 1
 fi
+###
+# User adjustable parameters
+#
+SRC_POOL="nvmepool"
+DST_POOL="spinpool"
 
-TON_DATA_POOL="nvmepool/$POOL_NAME"
-TON_SPIN_POOL="spinpool/$POOL_NAME"
+TON_SRC_FS="$SRC_POOL/$DS_NAME"
+TON_DST_FS="$DST_POOL/$DS_NAME"
 ZFS_BIN="/usr/sbin/zfs"
 PV_BIN="/usr/bin/pv"
 LS_BIN="/usr/bin/ls"
@@ -32,24 +37,24 @@ check_errs()
 }
 
 echo "Performing some sanity checks"
-$ZFS_BIN get all $TON_DATA_POOL@dumproot >/dev/null
-check_errs $? "$TON_DATA_POOL@dumproot check failed"
-$ZFS_BIN get all $TON_SPIN_POOL@dumproot >/dev/null
-check_errs $? "$TON_SPIN_POOL@dumproot check failed"
+$ZFS_BIN get all $TON_SRC_FS@dumproot >/dev/null
+check_errs $? "$TON_SRC_FS@dumproot check failed"
+$ZFS_BIN get all $TON_DST_FS@dumproot >/dev/null
+check_errs $? "$TON_DST_FS@dumproot check failed"
 $LS_BIN $DB_PATH >/dev/null 2>&1
 check_errs $? "$DB_PATH does not exist"
 
-$ZFS_BIN get all $TON_DATA_POOL@dumpdelta >/dev/null 2>&1
+$ZFS_BIN get all $TON_SRC_FS@dumpdelta >/dev/null 2>&1
 if [ "$?" -eq "0" ]; then
-	echo "$TON_DATA_POOL@dumpdelta found, removing"
-	$ZFS_BIN destroy $TON_DATA_POOL@dumpdelta
+	echo "$TON_SRC_FS@dumpdelta found, removing"
+	$ZFS_BIN destroy $TON_SRC_FS@dumpdelta
 	check_errs $? "removal failed"
 fi
 
-$ZFS_BIN get all $TON_SPIN_POOL@dumpdelta >/dev/null 2>&1
+$ZFS_BIN get all $TON_DST_FS@dumpdelta >/dev/null 2>&1
 if [ "$?" -eq "0" ]; then
-	echo "$TON_SPIN_POOL@dumpdelta found, removing"
-	$ZFS_BIN destroy $TON_SPIN_POOL@dumpdelta
+	echo "$TON_DST_FS@dumpdelta found, removing"
+	$ZFS_BIN destroy $TON_DST_FS@dumpdelta
 	check_errs $? "removal failed"
 fi
 
@@ -69,26 +74,26 @@ echo "Cleansing temporary files"
 $FIND_BIN $DB_PATH -name 'LOG.old*' -exec $RM_BIN {} +
 $RM_BIN -r $DB_PATH/files/packages/temp.archive.*
 
-echo "Creating $TON_DATA_POOL@dumpdelta snapshot"
-$ZFS_BIN snapshot $TON_DATA_POOL@dumpdelta
+echo "Creating $TON_SRC_FS@dumpdelta snapshot"
+$ZFS_BIN snapshot $TON_SRC_FS@dumpdelta
 check_errs $? "creation failed"
 
 echo "Starting $SERVICE service"
 $SYSTEMCTL_BIN start $SERVICE
 
-echo "Sending $TON_DATA_POOL@dumpdelta snapshot to $TON_SPIN_POOL, this will take some time!"
-$ZFS_BIN send -i $TON_DATA_POOL@dumproot $TON_DATA_POOL@dumpdelta | $PV_BIN | $ZFS_BIN recv -F $TON_SPIN_POOL
+echo "Sending $TON_SRC_FS@dumpdelta snapshot to $TON_DST_FS, this will take some time!"
+$ZFS_BIN send -i $TON_SRC_FS@dumproot $TON_SRC_FS@dumpdelta | $PV_BIN | $ZFS_BIN recv -F $TON_DST_FS
 check_errs $? "send failed"
 
 echo "Sending complete, removing old and creating new roots"
-$ZFS_BIN destroy $TON_DATA_POOL@dumproot
-check_errs $? "Removal of $TON_DATA_POOL@dumproot failed"
-$ZFS_BIN rename $TON_DATA_POOL@dumpdelta $TON_DATA_POOL@dumproot
-check_errs $? "Rename of $TON_DATA_POOL@dumpdelta failed"
+$ZFS_BIN destroy $TON_SRC_FS@dumproot
+check_errs $? "Removal of $TON_SRC_FS@dumproot failed"
+$ZFS_BIN rename $TON_SRC_FS@dumpdelta $TON_SRC_FS@dumproot
+check_errs $? "Rename of $TON_SRC_FS@dumpdelta failed"
 
-$ZFS_BIN destroy $TON_SPIN_POOL@dumproot
-check_errs $? "Removal of $TON_SPIN_POOL@dumproot failed"
-$ZFS_BIN rename $TON_SPIN_POOL@dumpdelta $TON_SPIN_POOL@dumproot
-check_errs $? "Rename of $TON_SPIN_POOL@dumpdelta failed"
+$ZFS_BIN destroy $TON_DST_FS@dumproot
+check_errs $? "Removal of $TON_DST_FS@dumproot failed"
+$ZFS_BIN rename $TON_DST_FS@dumpdelta $TON_DST_FS@dumproot
+check_errs $? "Rename of $TON_DST_FS@dumpdelta failed"
 
 echo "Mission acomplished!"
