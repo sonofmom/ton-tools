@@ -70,7 +70,7 @@ done
 echo " DONE"
 sleep 3
 
-echo "Cleansing temporary files"
+echo "Removing temporary files"
 $FIND_BIN $DB_PATH -name 'LOG.old*' -exec $RM_BIN {} +
 $RM_BIN -r $DB_PATH/files/packages/temp.archive.*
 
