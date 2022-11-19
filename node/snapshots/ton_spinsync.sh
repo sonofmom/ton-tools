@@ -4,10 +4,10 @@ DB_PATH=$1
 DS_NAME=$2
 SERVICE=$3
 
-if ([ -z ${DB_PATH} ] || [ -z ${DS_NAME} ] || [ -z ${SERVICE} ]); 
+if ([ -z ${DB_PATH} ] || [ -z ${DS_NAME} ] || [ -z ${SERVICE} ]);
 then
-	echo "Usage: "; 
-	echo "   ton_spinsync.sh <db_path> <zfs_dataset_name> <service>"; 
+	echo "Usage: ";
+	echo "   ton_spinsync.sh <db_path> <zfs_dataset_name> <service>";
 	exit 1
 fi
 ###
@@ -70,9 +70,10 @@ done
 echo " DONE"
 sleep 3
 
-echo "Removing temporary files"
+echo "Cleansing temporary files"
 $FIND_BIN $DB_PATH -name 'LOG.old*' -exec $RM_BIN {} +
 $RM_BIN -r $DB_PATH/files/packages/temp.archive.*
+$RM_BIN -r $DB_PATH/archive/tmp/*
 
 echo "Creating $TON_SRC_FS@dumpdelta snapshot"
 $ZFS_BIN snapshot $TON_SRC_FS@dumpdelta

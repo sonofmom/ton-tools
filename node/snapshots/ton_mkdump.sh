@@ -78,7 +78,7 @@ then
 	$ZFS_BIN snapshot $TON_ZFS_FS@dumpstate >/dev/null 2>&1
 
 	echo "Creating ZFS archive, this will take some time!"
-	$ZFS_BIN send $TON_ZFS_FS@dumpstate | $PV_BIN | $PLZIP_BIN $PLZIP_PARAMS > $WORK_PATH/$ARCHIVE_FILENAME	
+	$ZFS_BIN send $TON_ZFS_FS@dumpstate | $PV_BIN | $PLZIP_BIN $PLZIP_PARAMS > $WORK_PATH/$ARCHIVE_FILENAME
 else
 	echo "Creating TAR archive, this will take some time!"
 	cd $TON_ZFS_MOUNTPOINT/db

@@ -1,0 +1,18 @@
+[Unit]
+Description = TON rldp proxy
+After = network.target
+
+[Service]
+Type = simple
+Restart = always
+RestartSec = 30
+ExecStart = /usr/bin/ton/rldp-http-proxy/rldp-http-proxy --port 8080 --client-port <SETME> --global-config <SETME> --logname /var/log/rldp.log
+ExecStopPost = /bin/echo service down
+User = root
+Group = root
+LimitNOFILE = infinity
+LimitNPROC = infinity
+LimitMEMLOCK = infinity
+
+[Install]
+WantedBy = multi-user.target
