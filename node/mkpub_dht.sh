@@ -26,4 +26,4 @@ DHT_NODE=$($GRI_BIN -m dht -k $1/keyring/* -a "{
             \"expire_at\": 0
           }")
 			  
-echo $DHT_NODE | python -c "import sys, json; print(json.dumps(json.loads(sys.stdin.readlines()[0]), indent=2))"
+echo $DHT_NODE | python3 -c "import sys, json; print(json.dumps(json.loads(sys.stdin.readlines()[0]), indent=2))"
