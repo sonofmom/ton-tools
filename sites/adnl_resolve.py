@@ -37,15 +37,27 @@ def run():
                         default=1,
                         help='Verbosity - OPTIONAL')
 
-    parser.add_argument('adnl', nargs=1, help='ADNL address to resolve - REQUIRED')
+    parser.add_argument('adnl', nargs=1, help='ADNL address to resolve as hex or b64 - REQUIRED')
     args = parser.parse_args()
     verbosity = args.verbosity
 
-    log('Attempting to resolve ADNL {}'.format(args.adnl[0]))
+    adnl = None
+    try:
+        int(args.adnl[0], 16)
+        adnl = args.adnl[0].upper()
+    except Exception as e:
+        log('base64 encoded ADNL detected, converting to HEX')
+        adnl = base64.b64decode(args.adnl[0]).hex().upper()
+
+    if not adnl:
+        log('ERROR: Could not decode ADNL')
+        sys.exit(1)
+
+    log('Attempting to resolve ADNL {}'.format(adnl))
     log('Please wait, this can take some time')
     process_args = [args.resolver,
             "--global-config", args.config,
-            "--key-id", base64.b64encode(bytes.fromhex(args.adnl[0])).decode(),
+            "--key-id", base64.b64encode(bytes.fromhex(adnl)).decode(),
             "--key-name", "address",
             "--timeout", "10"]
 
