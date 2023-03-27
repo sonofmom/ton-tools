@@ -49,19 +49,28 @@ def run():
             "--key-name", "address",
             "--timeout", "10"]
 
-    process = subprocess.run(process_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                             timeout=10)
-    out = process.stdout.decode("utf-8")
+    ip = None
+    port = None
+    try:
+        process = subprocess.run(process_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                 timeout=10)
+        out = process.stdout.decode("utf-8")
 
-    match = re.match(r'.+\nVALUE: (.+)', out, re.MULTILINE)
-    if match:
-        result = base64.b64decode(match.group(1))
-        ip   = socket.inet_ntoa(struct.pack('>i',int.from_bytes(result[12:16], byteorder='little', signed=True)))
-        port = int.from_bytes(result[16:20], byteorder='little', signed=True)
+        match = re.match(r'.+\nVALUE: (.+)', out, re.MULTILINE)
+        if match:
+            result = base64.b64decode(match.group(1))
+            ip   = socket.inet_ntoa(struct.pack('>i',int.from_bytes(result[12:16], byteorder='little', signed=True)))
+            port = int.from_bytes(result[16:20], byteorder='little', signed=True)
+
+    except subprocess.TimeoutExpired:
+        log('Timeout')
+
+    if ip:
         log('Got result:')
         print("{}:{}".format(ip,port))
     else:
         log('Could not resolve, please retry or check ADNL')
+
 
 def log(message):
     global verbosity
