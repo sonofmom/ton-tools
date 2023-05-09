@@ -29,7 +29,8 @@ ARCHIVE_LIFETIME=2
 
 TON_ZFS_FS="$POOL/$DS_NAME"
 TON_ZFS_MOUNTPOINT="/$POOL/$DS_NAME"
-ARCHIVE_FILENAME="ton_dump$NAME_SUFFIX.`date +"%d_%m_%Y.%H-%M-%S"`.$DUMP_TYPE.lz"
+ARCHIVE_PREFIX="ton_dump"
+ARCHIVE_FILENAME="$ARCHIVE_PREFIX$NAME_SUFFIX.`date +"%d_%m_%Y.%H-%M-%S"`.$DUMP_TYPE.lz"
 
 TAR_BIN="/usr/bin/tar"
 PV_BIN="/usr/bin/pv"
@@ -99,6 +100,6 @@ echo "Updating DB size file"
 $ZFS_BIN get -p -H -o value logicalused $TON_ZFS_FS > $TARGET_PATH/latest$NAME_SUFFIX.size.disk.txt
 
 echo "Removing old archives"
-$FIND_BIN $TARGET_PATH/* -type f -mtime +$ARCHIVE_LIFETIME -exec $RM_BIN {} \;
+$FIND_BIN $TARGET_PATH/$ARCHIVE_PREFIX$NAME_SUFFIX* -type f -mtime +$ARCHIVE_LIFETIME -exec $RM_BIN {} \;
 
 echo "Mission acomplished!"
