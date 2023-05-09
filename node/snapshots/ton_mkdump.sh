@@ -70,7 +70,7 @@ echo "Removing local configuration and files"
 $RM_BIN -R $TON_ZFS_MOUNTPOINT/db/config.json* $TON_ZFS_MOUNTPOINT/db/keyring $TON_ZFS_MOUNTPOINT/db/dht* $TON_ZFS_MOUNTPOINT/logs $TON_ZFS_MOUNTPOINT/keys >/dev/null 2>&1
 
 echo "Cleansing workpath"
-$RM_BIN $WORK_PATH/* >/dev/null 2>&1
+$RM_BIN $WORK_PATH/$ARCHIVE_PREFIX$NAME_SUFFIX* >/dev/null 2>&1
 
 if [ "${DUMP_TYPE}" == "zfs" ]
 then
