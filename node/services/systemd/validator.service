@@ -1,0 +1,45 @@
+################################################################################
+# TON validator / node systemd service with integrated log rotation
+#
+# This systemd script can be used to control full node / validator, it is based on mytonctrl
+# it is based on service created by mytonctrl (https://github.com/ton-blockchain/mytonctrl)
+#
+# Logs from stdout and sterr will be cleansed from color codes and piped into cronolog for
+# storage and rotation.
+#
+# Requirements:
+#   * Installed TON Node
+#   * Cronolog (apt install cronolog)
+#
+# Installation:
+#   Edit line in ExecStart to match your environment, make sure you set appropriate values for
+#   threads parameter, also please note that this script assumes presence of dedicated log directory
+#   /var/ton-work/logs which should be writable by User that runs service (validator by default).
+#
+#   By default log file names will have YYYY-MM-DD.log format and rotated daily, you can adjust format
+#   to your liking using cronolog placeholders (man cronolog), just make sure to escape the escape
+#   character % by typing it twice, otherwise systemd will complain. For example: %%Y-%%m-%%d.log as
+#   seen in the default definition.
+#
+# Caveats:
+#   Please note that this script wraps validator-endine execution in it's own shell which might affect
+#   some monitoring scripts.
+#
+[Unit]
+Description = validator service with log rotation
+After = network.target
+
+[Service]
+Type = simple
+Restart = always
+RestartSec = 30
+ExecStart=/bin/sh -c '/usr/bin/ton/validator-engine/validator-engine --threads 31 --daemonize --global-config /usr/bin/ton/global.config.json --db /var/ton-work/db/ --state-ttl 604800 --verbosity 3 2>&1 | /usr/bin/sed -e "s/\x1b\[[0-9;]*m//g" | /usr/bin/cronolog /var/ton-work/logs/%%Y-%%m-%%d.log'
+ExecStopPost = /bin/echo service down
+User = validator
+Group = validator
+LimitNOFILE = infinity
+LimitNPROC = infinity
+LimitMEMLOCK = infinity
+
+[Install]
+WantedBy = multi-user.target
