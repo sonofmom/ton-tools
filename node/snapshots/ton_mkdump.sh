@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DS_NAME=$1
-TARGET_PATH=$2
+TARGET_PATH=${2%/}
 DUMP_TYPE=$3
 NAME_SUFFIX=$4
 
