@@ -40,6 +40,10 @@ echo "Checking if backup path is declared as such"
 $LS_BIN $BACKUP_PATH/.ton_backup_path >/dev/null 2>&1
 check_errs $? "File .ton_backup_path must exist in your backup path, please touch it first"
 
+echo "Checking presence of config.json"
+$LS_BIN $DB_PATH/config.json >/dev/null 2>&1
+check_errs $? "$DB_PATH/config.json does not exist"
+
 echo "Checking config.json size"
 if [ `$STAT_BIN -c%s $DB_PATH/config.json` -eq "0" ]; then
     echo "Config file has 0 size, probably broken, aborting backup"
