@@ -42,6 +42,8 @@ FIND_BIN="/usr/bin/find"
 MV_BIN="/usr/bin/mv"
 STAT_BIN="/usr/bin/stat"
 ZFS_BIN="/usr/sbin/zfs"
+XARGS_BIN="/usr/bin/xargs"
+GREP_BIN="/usr/bin/grep"
 
 check_errs()
 {
@@ -67,7 +69,8 @@ check_errs $? "$WORK_PATH does not exist"
 echo "Looks good!"
 
 echo "Removing local configuration and files"
-$RM_BIN -R $TON_ZFS_MOUNTPOINT/db/config.json* $TON_ZFS_MOUNTPOINT/db/keyring $TON_ZFS_MOUNTPOINT/db/dht* $TON_ZFS_MOUNTPOINT/logs $TON_ZFS_MOUNTPOINT/keys >/dev/null 2>&1
+$RM_BIN -R $TON_ZFS_MOUNTPOINT/db/config.json* $TON_ZFS_MOUNTPOINT/db/keyring $TON_ZFS_MOUNTPOINT/db/dht* >/dev/null 2>&1
+cd $TON_ZFS_MOUNTPOINT && $LS_BIN -tp | $GREP_BIN -v db\/ | $XARGS_BIN -I {} $RM_BIN -R -- {}
 
 echo "Cleansing workpath"
 $RM_BIN $WORK_PATH/$ARCHIVE_PREFIX$NAME_SUFFIX* >/dev/null 2>&1
