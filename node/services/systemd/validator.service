@@ -17,8 +17,8 @@
 #   ##VERBOSITY_PL##: Verbosity
 #   ##RET_PL##: Put retention flags here, a node with 3 month retention will have for example: --state-ttl 7776000 --archive-ttl 7776000 --block-ttl 7776000
 #
-#   also please note that this script assumes presence of dedicated log directory
-#   /var/ton-work/logs which should be writable by User that runs service (validator by default).
+#   Create global config directory /var/ton-work/etc and copy network global config there:  curl -o /var/ton-work/etc/global.config.json https://raw.githubusercontent.com/ton-blockchain/ton-blockchain.github.io/main/global.config.json
+#   Create log directory /var/ton-work/logs which should be writable by user that runs service (validator by default).
 #
 #   By default log file names will have YYYY-MM-DD.log format and rotated daily, you can adjust format
 #   to your liking using cronolog placeholders (man cronolog), just make sure to escape the escape
