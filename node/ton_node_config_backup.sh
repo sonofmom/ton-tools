@@ -13,6 +13,7 @@ fi
 
 BACKUP_NAME="`date +"%Y-%m-%d_%H.%M.%S"`"
 LS_BIN="/usr/bin/ls"
+LN_BIN="/usr/bin/ln"
 RM_BIN="/usr/bin/rm"
 CP_BIN="/usr/bin/cp"
 MKDIR_BIN="/usr/bin/mkdir"
@@ -63,7 +64,15 @@ echo "Copying keyring"
 $CP_BIN -rp $DB_PATH/keyring $BACKUP_DIR
 check_errs $? "Copying of keyring failed!"
 
+if [ -f "$BACKUP_PATH/latest" ]; then
+    echo "Removing old latest link"
+    $RM_BIN "$BACKUP_PATH/latest"
+fi
+
 echo "Removing old backups"
 cd $BACKUP_PATH && $LS_BIN -tp | $TAIL_BIN -n +$($EXPR_BIN $KEEP_COUNT + 1) | $XARGS_BIN -I {} $RM_BIN -R -- {}
+
+echo "Creating latest link"
+$LN_BIN $BACKUP_DIR $BACKUP_PATH/latest
 
 echo "Mission acomplished!"
