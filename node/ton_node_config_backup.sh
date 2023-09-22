@@ -73,6 +73,6 @@ echo "Removing old backups"
 cd $BACKUP_PATH && $LS_BIN -tp | $TAIL_BIN -n +$($EXPR_BIN $KEEP_COUNT + 1) | $XARGS_BIN -I {} $RM_BIN -R -- {}
 
 echo "Creating latest link"
-$LN_BIN $BACKUP_DIR $BACKUP_PATH/latest
+$LN_BIN -s $BACKUP_DIR $BACKUP_PATH/latest
 
 echo "Mission acomplished!"
