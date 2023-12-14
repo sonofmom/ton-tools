@@ -6,11 +6,11 @@ import Libraries.tools.general as gt
 
 def get_console_environment(instance_name=None, log=None):
     result = {}
-    if instance_name:
+    if instance_name and instance_name != 'default':
         log.log(os.path.basename(__file__), 3, "Parsing environment variables for instance '{}'".format(instance_name.upper()))
         instance_name = "_{}".format(instance_name.upper())
     else:
-        log.log(os.path.basename(__file__), 3, "Parsing environment variables")
+        log.log(os.path.basename(__file__), 3, "Parsing default environment variables")
         instance_name = ''
 
     ton_node_config_var = 'TON_NODE_CONFIG{}'.format(instance_name)

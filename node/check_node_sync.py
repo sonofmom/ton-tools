@@ -34,6 +34,7 @@ def run():
                         required=False,
                         type=str,
                         dest='instance_name',
+                        default='default',
                         action='store',
                         help='Instance name to use in environmental variables parsing - OPTIONAL')
 
@@ -84,7 +85,7 @@ def run():
             except Exception as e:
                 rs = 'failed'
 
-            print('{}: {}'.format(gt.get_datetime_string(timestamp=int(time.time())), rs))
+            print('[{}] {}: {}'.format(args.instance_name, gt.get_datetime_string(timestamp=int(time.time())), rs))
             runtime = (int(time.time()) - start_time)
 
             if runtime < args.interval:
