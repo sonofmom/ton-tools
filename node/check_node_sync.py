@@ -85,7 +85,7 @@ def run():
             except Exception as e:
                 rs = 'failed'
 
-            print('[{}] {}: {}'.format(args.instance_name, gt.get_datetime_string(timestamp=int(time.time())), rs))
+            print('[{} - {}] {}: {}'.format(os.uname()[1], args.instance_name, gt.get_datetime_string(timestamp=int(time.time())), rs))
             runtime = (int(time.time()) - start_time)
 
             if runtime < args.interval:
