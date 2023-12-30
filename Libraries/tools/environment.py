@@ -13,8 +13,6 @@ def get_console_environment(instance_name=None, log=None):
         log.log(os.path.basename(__file__), 3, "Parsing default environment variables")
         instance_name = ''
 
-    ton_node_config_var = 'TON_NODE_CONFIG{}'.format(instance_name)
-
     result = {
         'bin':  os.environ.get('TON_CONSOLE_BIN{}'.format(instance_name)),
         'client_key': os.environ.get('TON_CONSOLE_CLIENT_KEY{}'.format(instance_name)),
