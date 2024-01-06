@@ -24,11 +24,18 @@ def get_console_environment(instance_name=None, log=None):
         'timeout': 5
     }
 
-    if result['node_config'] and gt.check_file_exists(result['node_config']):
-        with open(result['node_config'], 'r') as fd:
-            config = json.loads(fd.read())
-            result['server_address'] = gt.dec2ip(config['addrs'][0]['ip'])
-            result['server_port'] = config['control'][0]['port']
+    if result['node_config']:
+        if gt.check_file_exists(result['node_config']):
+            with open(result['node_config'], 'r') as fd:
+                config = json.loads(fd.read())
+                result['server_address'] = gt.dec2ip(config['addrs'][0]['ip'])
+                result['server_port'] = config['control'][0]['port']
+
+            if not result['server_address']:
+                log.log(os.path.basename(__file__), 3, "Warning: Configuration file '{}' could not be parsed".format(result['node_config']))
+
+        else:
+            log.log(os.path.basename(__file__), 3, "Warning: Configuration file '{}' not found".format(result['node_config']))
 
     return result
 
