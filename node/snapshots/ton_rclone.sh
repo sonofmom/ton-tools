@@ -49,6 +49,7 @@ upload_file()
 	echo "Total of $elapsed seconds elapsed for process"
 }
 
+echo "rclone start at `date +"%d-%m-%Y %H:%M:%S"`"
 echo "Performing basic sanity checks"
 $LS_BIN $SNAP_PATH/$SNAP_PREFIX.lz >/dev/null 2>&1
 check_errs $? "$SNAP_PATH/$SNAP_PREFIX.lz does not exist"
@@ -88,3 +89,4 @@ upload_file $FILE_SIZE_ARCHIVE $SNAP_PREFIX.size.archive.txt
 upload_file $FILE_SIZE_DISK $SNAP_PREFIX.size.disk.txt
 
 echo "Mission acomplished!"
+echo "rclone end at `date +"%d-%m-%Y %H:%M:%S"`"

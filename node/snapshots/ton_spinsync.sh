@@ -36,6 +36,7 @@ check_errs()
   fi
 }
 
+echo "spinsync start at `date +"%d-%m-%Y %H:%M:%S"`"
 echo "Performing some sanity checks"
 $ZFS_BIN get all $TON_SRC_FS@dumproot >/dev/null
 check_errs $? "$TON_SRC_FS@dumproot check failed"
@@ -98,3 +99,4 @@ $ZFS_BIN rename $TON_DST_FS@dumpdelta $TON_DST_FS@dumproot
 check_errs $? "Rename of $TON_DST_FS@dumpdelta failed"
 
 echo "Mission acomplished!"
+echo "spinsync end at `date +"%d-%m-%Y %H:%M:%S"`"

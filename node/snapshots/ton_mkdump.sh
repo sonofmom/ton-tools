@@ -58,6 +58,7 @@ check_errs()
   fi
 }
 
+echo "mkdump start at `date +"%d-%m-%Y %H:%M:%S"`"
 echo "Performing some sanity checks"
 $LS_BIN $TON_ZFS_MOUNTPOINT/db/config.json >/dev/null 2>&1
 check_errs $? "$TON_ZFS_MOUNTPOINT/db/config.json does not exist, sync failed?"
@@ -114,3 +115,4 @@ echo "Removing old archives"
 $FIND_BIN $TARGET_PATH/$ARCHIVE_PREFIX$NAME_SUFFIX.* -type f -mtime +$ARCHIVE_LIFETIME -exec $RM_BIN {} \;
 
 echo "Mission acomplished!"
+echo "mkdump end at `date +"%d-%m-%Y %H:%M:%S"`"
