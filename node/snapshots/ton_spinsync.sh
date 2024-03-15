@@ -73,7 +73,6 @@ sleep 3
 
 echo "Cleansing temporary files"
 $FIND_BIN $DB_PATH -name 'LOG.old*' -exec $RM_BIN {} +
-$RM_BIN -r $DB_PATH/files/packages/temp.archive.*
 $RM_BIN -r $DB_PATH/archive/tmp/*
 
 echo "Creating $TON_SRC_FS@dumpdelta snapshot"
