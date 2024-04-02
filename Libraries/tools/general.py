@@ -40,3 +40,6 @@ def dec2ip(value):
 
 def ip2dec(value):
     return struct.unpack('>i',socket.inet_aton(value))[0]
+
+def unique(data):
+    return list(set(data))

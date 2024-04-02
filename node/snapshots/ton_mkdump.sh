@@ -1,14 +1,15 @@
 #!/bin/bash
 
 DS_NAME=$1
-TARGET_PATH=${2%/}
-DUMP_TYPE=$3
-NAME_SUFFIX=$4
+WORK_PATH=${2%/}
+TARGET_PATH=${3%/}
+DUMP_TYPE=$4
+NAME_SUFFIX=$5
 
-if ([ -z ${DS_NAME} ] || [ -z ${TARGET_PATH} ] || [ -z ${DUMP_TYPE} ]);
+if ([ -z ${DS_NAME} ] || [ -z ${WORK_PATH} ] || [ -z ${TARGET_PATH} ] || [ -z ${DUMP_TYPE} ]);
 then
         echo "Usage: ";
-	echo "   ton_mkdump.sh <dataset_name> <target_path> <dump_type> [naming suffix (optional)]";
+	echo "   ton_mkdump.sh <stage_dataset_name> <work_path> <target_path> <dump_type> [naming suffix (optional)]";
         exit 1
 fi
 
@@ -17,21 +18,6 @@ then
         echo "Dump type must be either tar or zfs."
         exit 1
 fi
-
-###
-# User adjustable parameters
-#
-POOL="spinpool"
-PLZIP_PARAMS="-6 -n8"
-WORK_PATH="/spinpool/work"
-# In Days
-ARCHIVE_LIFETIME=2
-
-TON_ZFS_FS="$POOL/$DS_NAME"
-TON_ZFS_MOUNTPOINT="/$POOL/$DS_NAME"
-ARCHIVE_PREFIX="ton_dump"
-ARCHIVE_NAME="$ARCHIVE_PREFIX$NAME_SUFFIX.`date +"%d_%m_%Y.%H-%M-%S"`.$DUMP_TYPE"
-ARCHIVE_FILENAME="$ARCHIVE_NAME.lz"
 
 TAR_BIN="/usr/bin/tar"
 PV_BIN="/usr/bin/pv"
@@ -47,6 +33,21 @@ XARGS_BIN="/usr/bin/xargs"
 GREP_BIN="/usr/bin/grep"
 SHASUM_BIN="/usr/bin/shasum"
 
+###
+# User adjustable parameters
+#
+# In Days
+ARCHIVE_LIFETIME=2
+
+if [[ -z "${PLZIP_PARAMS}" ]]; then
+  PLZIP_PARAMS="-2 -n16"
+fi
+
+DS_MOUNTPOINT="$($ZFS_BIN get -H mountpoint $DS_NAME | cut -f3)"
+ARCHIVE_PREFIX="ton_dump"
+ARCHIVE_NAME="$ARCHIVE_PREFIX$NAME_SUFFIX.`date +"%d_%m_%Y.%H-%M-%S"`.$DUMP_TYPE"
+ARCHIVE_FILENAME="$ARCHIVE_NAME.lz"
+
 check_errs()
 {
   # Function. Parameter 1 is the return code
@@ -60,8 +61,8 @@ check_errs()
 
 echo "mkdump start at `date +"%d-%m-%Y %H:%M:%S"`"
 echo "Performing some sanity checks"
-$LS_BIN $TON_ZFS_MOUNTPOINT/db/config.json >/dev/null 2>&1
-check_errs $? "$TON_ZFS_MOUNTPOINT/db/config.json does not exist, sync failed?"
+$LS_BIN $DS_MOUNTPOINT/config.json >/dev/null 2>&1
+check_errs $? "$DS_MOUNTPOINT/config.json does not exist, sync failed?"
 
 $LS_BIN $TARGET_PATH >/dev/null 2>&1
 check_errs $? "$TARGET_PATH does not exist"
@@ -72,8 +73,7 @@ check_errs $? "$WORK_PATH does not exist"
 echo "Looks good!"
 
 echo "Removing local configuration and files"
-$RM_BIN -R $TON_ZFS_MOUNTPOINT/db/config.json* $TON_ZFS_MOUNTPOINT/db/keyring $TON_ZFS_MOUNTPOINT/db/dht* >/dev/null 2>&1
-cd $TON_ZFS_MOUNTPOINT && $LS_BIN -tp | $GREP_BIN -v db\/ | $XARGS_BIN -I {} $RM_BIN -R -- {}
+$RM_BIN -R $DS_MOUNTPOINT/config.json* $DS_MOUNTPOINT/keyring $DS_MOUNTPOINT/dht* >/dev/null 2>&1
 
 echo "Cleansing workpath"
 $RM_BIN $WORK_PATH/$ARCHIVE_PREFIX$NAME_SUFFIX.* >/dev/null 2>&1
@@ -81,14 +81,14 @@ $RM_BIN $WORK_PATH/$ARCHIVE_PREFIX$NAME_SUFFIX.* >/dev/null 2>&1
 if [ "${DUMP_TYPE}" == "zfs" ]
 then
 	echo "Making transfer snap"
-	$ZFS_BIN destroy $TON_ZFS_FS@dumpstate >/dev/null 2>&1
-	$ZFS_BIN snapshot $TON_ZFS_FS@dumpstate >/dev/null 2>&1
+	$ZFS_BIN destroy $DS_NAME@dumpstate >/dev/null 2>&1
+	$ZFS_BIN snapshot $DS_NAME@dumpstate >/dev/null 2>&1
 
 	echo "Creating ZFS archive, this will take some time!"
-	$ZFS_BIN send $TON_ZFS_FS@dumpstate | $PV_BIN | $PLZIP_BIN $PLZIP_PARAMS > $WORK_PATH/$ARCHIVE_NAME.lz
+	$ZFS_BIN send $DS_NAME@dumpstate | $PV_BIN | $PLZIP_BIN $PLZIP_PARAMS > $WORK_PATH/$ARCHIVE_NAME.lz
 else
 	echo "Creating TAR archive, this will take some time!"
-	cd $TON_ZFS_MOUNTPOINT/db
+	cd $DS_MOUNTPOINT
 	$TAR_BIN -c * | $PV_BIN | $PLZIP_BIN $PLZIP_PARAMS > $WORK_PATH/$ARCHIVE_NAME.lz
 fi
 
@@ -99,7 +99,7 @@ echo "Creating archive size file"
 $STAT_BIN -c%s $WORK_PATH/$ARCHIVE_NAME.lz > $WORK_PATH/$ARCHIVE_NAME.size.archive.txt
 
 echo "Creating DB size file"
-$ZFS_BIN get -p -H -o value logicalused $TON_ZFS_FS > $WORK_PATH/$ARCHIVE_NAME.size.disk.txt
+$ZFS_BIN get -p -H -o value logicalused $DS_NAME > $WORK_PATH/$ARCHIVE_NAME.size.disk.txt
 
 echo "Moving files into dumps path"
 $MV_BIN $WORK_PATH/$ARCHIVE_PREFIX$NAME_SUFFIX.* $TARGET_PATH
