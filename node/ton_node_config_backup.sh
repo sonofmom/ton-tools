@@ -64,7 +64,7 @@ echo "Copying keyring"
 $CP_BIN -rp $DB_PATH/keyring $BACKUP_DIR
 check_errs $? "Copying of keyring failed!"
 
-if [ -f "$BACKUP_PATH/latest" ]; then
+if [ -e "$BACKUP_PATH/latest" ]; then
     echo "Removing old latest link"
     $RM_BIN "$BACKUP_PATH/latest"
 fi
