@@ -37,7 +37,7 @@ SHASUM_BIN="/usr/bin/shasum"
 # User adjustable parameters
 #
 # In Days
-ARCHIVE_LIFETIME=2
+ARCHIVE_LIFETIME=1
 
 if [[ -z "${PLZIP_PARAMS}" ]]; then
   PLZIP_PARAMS="-2 -n16"
@@ -110,6 +110,9 @@ $LN_BIN -s $TARGET_PATH/$ARCHIVE_NAME.lz $TARGET_PATH/latest$NAME_SUFFIX.$DUMP_T
 $LN_BIN -s $TARGET_PATH/$ARCHIVE_NAME.sha256sum.txt $TARGET_PATH/latest$NAME_SUFFIX.$DUMP_TYPE.sha256sum.txt
 $LN_BIN -s $TARGET_PATH/$ARCHIVE_NAME.size.archive.txt $TARGET_PATH/latest$NAME_SUFFIX.$DUMP_TYPE.size.archive.txt
 $LN_BIN -s $TARGET_PATH/$ARCHIVE_NAME.size.disk.txt $TARGET_PATH/latest$NAME_SUFFIX.$DUMP_TYPE.size.disk.txt
+
+echo "Writing out archive name of latest dump into latest file"
+echo "$ARCHIVE_NAME" > $TARGET_PATH/latest$NAME_SUFFIX.$DUMP_TYPE.name.txt
 
 echo "Removing old archives"
 $FIND_BIN $TARGET_PATH/$ARCHIVE_PREFIX$NAME_SUFFIX.* -type f -mtime +$ARCHIVE_LIFETIME -exec $RM_BIN {} \;
