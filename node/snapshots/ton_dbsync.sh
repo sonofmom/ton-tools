@@ -72,6 +72,7 @@ DB_PATH="$($ZFS_BIN get -H mountpoint $SRC_DS | cut -f3)"
 echo "Cleansing temporary files"
 $FIND_BIN $DB_PATH -name 'LOG.old*' -exec $RM_BIN {} +
 $FIND_BIN $DB_PATH/files/packages -name temp.archive* -mtime +1 -exec $RM_BIN -r {} +
+$FIND_BIN $DB_PATH/archive/tmp -mtime +1 -exec $RM_BIN -r {} +
 
 echo "Creating $SRC_DS@dumpdelta snapshot"
 $ZFS_BIN snapshot $SRC_DS@dumpdelta
