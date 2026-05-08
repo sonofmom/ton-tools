@@ -124,10 +124,22 @@ class ValidatorConsole:
         if match:
             mc_block_time = match.group(1)
 
+        last_mc_ago = None
         if server_time and mc_block_time:
-            return int(server_time) - int(mc_block_time)
-        else:
-            return None
+            last_mc_ago = int(server_time) - int(mc_block_time)
+
+        pattern = r'masterchainblock\s+\([^,]+,[^,]+,(\d+)\)'
+        match = re.search(r'^' + pattern, output, re.MULTILINE)
+        mc_seqno = None
+        if match:
+            mc_seqno = int(match.group(1))
+
+        match = re.match(r'.+shardclientmasterchainseqno\s*(\d+).*', output, re.DOTALL)
+        wc_seqno = None
+        if match:
+            wc_seqno = int(match.group(1))
+
+        return {'last_mc_ago': last_mc_ago, 'wc_lag': mc_seqno - wc_seqno}
 
     def parse_block_info(self, as_string):
         match = re.match(r'\((-?\d*),(\d*),(\d*)\)|(\w*):(\w*).+', as_string, re.M | re.I)

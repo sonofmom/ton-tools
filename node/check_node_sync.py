@@ -76,12 +76,14 @@ def run():
     console = ValidatorConsole(args, env, log)
 
     if not args.life:
-        print(console.getSyncStatus())
+        rs = console.getSyncStatus()
+        print(rs['last_mc_ago'])
     else:
         while True:
             start_time = int(time.time())
             try:
                 rs = console.getSyncStatus()
+                rs = '{} / {}'.format(rs['last_mc_ago'], rs['wc_lag'])
             except Exception as e:
                 rs = 'failed'
 
