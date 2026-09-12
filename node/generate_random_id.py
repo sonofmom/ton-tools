@@ -5,14 +5,15 @@ https://github.com/ton-blockchain/ton/blob/master/utils/generate-random-id.cpp
 
 Generates a random Ed25519 key (or imports one with -k) and, depending on --mode:
 
-  id      print the private key, public key and ADNL short id as TL JSON
+  id      print the private key, public key and ADNL short id as TL JSON; with
+          --dict, as one {"pk": ..., "pub": ..., "adnl": ...} object of base64 values
   adnl    print an adnl.node record for the key and an address list (-a/-f)
   dht     print a signed dht.node record, as used in global config files
   keys    write the key to <name> and <name>.pub, print its hash (hex, base64)
   adnlid  write the key to a file named after its hash, print hash and ADNL address
 
-Output and key files are byte-for-byte compatible with the C++ tool.
-Requires PyNaCl (pip install pynacl).
+Output and key files are byte-for-byte compatible with the C++ tool (--dict is
+an addition of this port). Requires PyNaCl (pip install pynacl).
 """
 
 import argparse
@@ -325,6 +326,8 @@ def main(argv=None):
     p.add_argument("-a", "--addr-list", action=_InOrder, help="addr list to sign")
     p.add_argument("-f", "--addr-list-file", action=_InOrder, help="path to file with addr-list")
     p.add_argument("-i", "--network-id", action=_InOrder, help="dht network id (default: -1)")
+    p.add_argument("--dict", action="store_true",
+                   help="with -m id: print one JSON object with pk, pub and adnl (short id) values")
     p.set_defaults(checked=[])
     args = p.parse_args(argv)
 
@@ -353,6 +356,9 @@ def main(argv=None):
     if not args.mode:
         print("'--mode' option missing", file=sys.stderr)
         return 2
+    if args.dict and args.mode != "id":
+        print("'--dict' is only supported with '-m id'", file=sys.stderr)
+        return 2
 
     if pk is None:
         pk = PrivateKey.random()
@@ -361,9 +367,12 @@ def main(argv=None):
 
     try:
         if args.mode == "id":
-            print(tl_to_json(pk.tl()))
-            print(tl_to_json(pub))
-            print(tl_to_json({"@type": "adnl.id.short", "id": short_id}))
+            if args.dict:
+                print(tl_to_json({"pk": pk.key, "pub": pub["key"], "adnl": short_id}))
+            else:
+                print(tl_to_json(pk.tl()))
+                print(tl_to_json(pub))
+                print(tl_to_json({"@type": "adnl.id.short", "id": short_id}))
         elif args.mode in ("adnl", "dht"):
             if addr_list is None:
                 print("'-a' option missing", file=sys.stderr)
